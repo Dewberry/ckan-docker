@@ -2,23 +2,10 @@ version: "3"
 
 volumes:
   ckan_storage:
-  pg_data:
   solr_data:
 
 services:
 
-  nginx:
-    container_name: ${NGINX_CONTAINER_NAME}
-    build:
-      context: nginx/
-      dockerfile: Dockerfile
-    depends_on:
-      ckan:
-        condition: service_healthy
-    ports:
-      - "0.0.0.0:${NGINX_PORT_HOST}:${NGINX_PORT}"
-      - "0.0.0.0:${NGINX_SSLPORT_HOST}:${NGINX_SSLPORT}"
-    
   ckan:
     container_name: ${CKAN_CONTAINER_NAME}
     build:
@@ -28,6 +15,13 @@ services:
         - TZ=${TZ}
     env_file:
       - .env
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.ckan.rule=Host(`ckan.dewberryanalytics.com`)'
+      - 'traefik.http.routers.ckan.tls=true'
+      - 'traefik.http.routers.ckan.tls.certresolver=lets-encrypt'
+      - 'traefik.docker.network=traefik_default'
+      - 'traefik.http.routers.static.middlewares=secHeaders@file'
     depends_on:
       db:
         condition: service_healthy
@@ -61,8 +55,10 @@ services:
       - DATASTORE_READONLY_PASSWORD=${DATASTORE_READONLY_PASSWORD}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - PGDATA=/var/lib/postgresql/data/db
+    ports:
+      - '5432:5432'
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ./pg_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "ckan"]
@@ -82,3 +78,25 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "-e", "QUIT"]
+
+  traefik:
+    image: traefik:2.6
+    restart: unless-stopped
+    depends_on:
+      ckan:
+        condition: service_healthy
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./traefik:/etc/traefik
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - ./logs/traefik.log:/opt/traefik/traefik.log # Need to add an empty log file initially or it will create a directory
+    labels:
+      - 'traefik.port=8080'
+      # - "com.centurylinklabs.watchtower.enable=false"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 128m

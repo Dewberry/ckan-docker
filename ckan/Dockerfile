@@ -1,5 +1,5 @@
-FROM ckan/ckan-base:dev-v2.10
-#FROM ckan/ckan-base:2.9.7
+# FROM ckan/ckan-base:dev-v2.10
+FROM ckan/ckan-base:2.9.7
 
 # Set up environment variables
 ENV APP_DIR=/srv/app
@@ -10,3 +10,5 @@ RUN echo ${TZ} > /etc/timezone
 RUN if ! [ /usr/share/zoneinfo/${TZ} -ef /etc/localtime ]; then \
         cp /usr/share/zoneinfo/${TZ} /etc/localtime ;\
     fi ;
+
+EXPOSE 5000
