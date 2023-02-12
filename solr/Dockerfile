@@ -3,7 +3,7 @@ FROM solr:6.6.6
 # Enviroment variables
 ENV SOLR_CORE ckan
 ENV SOLR_VERSION 6.6.6
-ENV CKAN_VERSION 2.9.4
+ENV CKAN_VERSION 2.9.7
 ###TODO!!! CKAN_VERSION to be passed in as an ARG
 
 # root user for initial config

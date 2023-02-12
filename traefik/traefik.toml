@@ -1,0 +1,20 @@
+[log]
+  level = "WARN"
+
+[providers]
+  [providers.docker]
+    exposedByDefault = false
+  [providers.file]
+    filename = "/etc/traefik/dynamic/tls.yml"
+    watch = true
+
+[entryPoints]
+  [entryPoints.http]
+    address = ":80"
+  [entryPoints.https]
+    address = ":443"
+
+[certificatesResolvers.lets-encrypt.acme]
+  storage = "/etc/traefik/acme.json"
+  email = "slawler@dewberry.com"
+  [certificatesResolvers.lets-encrypt.acme.tlsChallenge]
